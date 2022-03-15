@@ -10,6 +10,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using TodoListAPI.Contexts;
+using Microsoft.EntityFrameworkCore.SqlServer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using TodoListAPI.Entities;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Newtonsoft.Json;
 
 namespace TodoListAPI
 {
@@ -25,7 +34,42 @@ namespace TodoListAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddDbContext<TodoContext>(options => 
+            {
+                options.UseSqlServer(Configuration["ConnectionString"]);
+            });
+            services.AddIdentityCore<User>(options => 
+            {
+                options.Password.RequiredLength = 10;
+                options.User.RequireUniqueEmail = true;
+            })
+                .AddEntityFrameworkStores<TodoContext>()
+                .AddDefaultTokenProviders();
+            services.AddAuthentication(options => options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options => 
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidAudience = Configuration["Jwt:Audience"],
+                        ValidIssuer = Configuration["Jwt:Issuer"],
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF32.GetBytes(Configuration["Jwt:Secret"]))
+                    };
+                });
+            services.AddAuthorization(options => 
+            {
+                options.AddPolicy("ClaimsRequirement", policy =>
+                {
+                    policy.RequireClaim("userid");
+                    policy.RequireClaim("username");
+                });
+            });
+            services.AddControllers().AddNewtonsoftJson(options => 
+            {
+                options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -40,6 +84,7 @@ namespace TodoListAPI
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
