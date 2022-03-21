@@ -29,6 +29,12 @@ namespace TodoListAPI.Controllers
             _uManager = uManager;
             _config = config;
         }
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult Hello()
+        {
+            return Ok();
+        }
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginBody body)
