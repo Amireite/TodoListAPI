@@ -29,12 +29,6 @@ namespace TodoListAPI.Controllers
             _uManager = uManager;
             _config = config;
         }
-        [HttpGet]
-        [AllowAnonymous]
-        public IActionResult Hello()
-        {
-            return Ok();
-        }
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginBody body)
@@ -82,7 +76,7 @@ namespace TodoListAPI.Controllers
                 var result = await _uManager.CreateAsync(newUser, body.password);
                 if(!result.Succeeded)
                 {
-                    return BadRequest("Password length must be atleast 10 characters.");
+                    return BadRequest("Password must be atleast 10 characters.");
                 }
 
                 return Ok(new

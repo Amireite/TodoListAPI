@@ -60,6 +60,11 @@ namespace TodoListAPI.Controllers
                     user.TodoList = new List<TodoItem>();
                 }
 
+                if(user.TodoList.Count >= 20)
+                {
+                    return BadRequest("Too many todo items!");
+                }
+
                 user.TodoList.Add(new TodoItem
                 {
                     Content = body.Content,
